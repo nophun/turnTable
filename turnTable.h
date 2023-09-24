@@ -1,7 +1,7 @@
 #pragma once
 
-#define STEPPER1_STEPS        200
-#define STEPPER1_MICROSTEPS   8
+#define STEPPER1_STEPS        48
+#define STEPPER1_MICROSTEPS   2
 #define STEPPER1_RPM          200
 
 #define STEPPER2_STEPS        200
@@ -18,5 +18,5 @@
 
 #define LONG_PRESS_TIME       2000 /* ms */
 
-#define TABLE_REDUCTION 		1.0F
+#define TABLE_REDUCTION 		(94.0F/26.0F)
 #define RPM_TO_DEGREE_PER_SEC 	0.166666F

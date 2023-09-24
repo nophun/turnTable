@@ -42,27 +42,27 @@ void check_serial(void) {
 
     switch(incomingByte) {
         case 'a':
-            speed = 75;
+            speed = 6;
             print_configuration(distance, speed, direction);
             break;
         case 's':
-            speed = 150;
+            speed = 12;
             print_configuration(distance, speed, direction);
             break;
         case 'd':
-            speed = 300;
+            speed = 24;
             print_configuration(distance, speed, direction);
             break;
         case 'f':
-            speed = 600;
+            speed = 48;
             print_configuration(distance, speed, direction);
             break;
         case 'g':
-            speed = 900;
+            speed = 96;
             print_configuration(distance, speed, direction);
             break;
         case 'h':
-            speed = 1200;
+            speed = 192;
             print_configuration(distance, speed, direction);
             break;
         case 'q':
@@ -152,7 +152,7 @@ void setup() {
     oled.set_header("SLIDER V1", Alignment::Center);
     oled.set_unit(UNIT_none);
     oled.refresh();
-    rotary.init();
+    rotary.init(IOMASK_ROT_DAT, IOMASK_ROT_CLK, IOMASK_ROT_BUT);
     menu.init();
 } 
 
@@ -168,17 +168,19 @@ void loop() {
     int16_t rotation;
     float anglular_speed;
 
-    // uint16_t io_data = IOE_read(IOE_ADDRESS);
-    // uint8_t rotary_state = rotary.read_encoder(io_data);
-    // uint8_t button_state = rotary.read_button(io_data);
+    uint16_t io_data = read_rotary();
+    uint8_t rotary_state = rotary.read_encoder(io_data);
+    uint8_t button_state = rotary.read_button(io_data);
 
-    // if (rotary_state == DIR_CW) {
-    //     menu.increase_value();
-    // } else if (rotary_state == DIR_CCW) {
-    //     menu.decrease_value();
-    // }
+    if (rotary_state == DIR_CW) {
+        Serial.println("CW");
+    } else if (rotary_state == DIR_CCW) {
+        Serial.println("CCW");
+    }
 
-    // if (button_state == BUT_DOWN) {
+    if (button_state == BUT_DOWN) {
+        Serial.println("BUT");
+    }
     //     if (menu.enter() == Menu::Action::Start) {
     //         oled.refresh();
     //         speed = menu.get_speed();
