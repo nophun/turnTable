@@ -28,15 +28,17 @@ RotaryEncoder::RotaryEncoder(RotaryMode mode) : m_mode(mode) {
     m_last_io_data = 0;
 }
 
-void RotaryEncoder::init() {
-
+void RotaryEncoder::init(uint16_t data_mask, uint16_t clock_mask, uint16_t button_mask) {
+    m_data_pin_mask = data_mask;
+    m_clock_pin_mask = clock_mask;
+    m_button_pin_mask = button_mask;
 }
 
 uint8_t RotaryEncoder::read_encoder(uint16_t data) {
     uint8_t direction;
 
-    bool dat = data & IOE_BUT_B;
-    bool clk = data & IOE_BUT_C;
+    bool dat = data & m_data_pin_mask;
+    bool clk = data & m_clock_pin_mask;
 
     if (m_mode == RotaryMode::HALF_STEP) {
         m_input_last_state = halfStepsTable[m_input_last_state & STEP_MASK][(dat << 1) | clk];
@@ -50,9 +52,9 @@ uint8_t RotaryEncoder::read_encoder(uint16_t data) {
 }
 
 uint8_t RotaryEncoder::read_button(uint16_t data) {
-    if ((data ^ m_last_io_data) & IOE_BUT_A) {
+    if ((data ^ m_last_io_data) & m_button_pin_mask) {
         m_last_io_data = data;
-        if (data & IOE_BUT_A) {
+        if (data & m_button_pin_mask) {
             return BUT_UP;
         } else {
             return BUT_DOWN;

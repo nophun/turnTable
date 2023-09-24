@@ -5,16 +5,20 @@
 
 #define BV(b) (1<<(b))
 
-#define IO_STEPPER_EN1   0
-#define IO_STEPPER_STEP1 1
-#define IO_STEPPER_DIR1  2
-#define IO_STEPPER_EN2   3
-#define IO_STEPPER_STEP2 9
-#define IO_STEPPER_DIR2  8
-#define IO_ENDSTOP       7
-#define IO_IOE_INT       10
-#define IO_I2C_SDA       4
-#define IO_I2C_SCL       5
+static constexpr int IO_STEPPER_EN1 = 0;
+static constexpr int IO_STEPPER_STEP1 = 1;
+static constexpr int IO_STEPPER_DIR1 = 2;
+static constexpr int IO_ENDSTOP = 7;
+static constexpr int IO_IOE_INT = 10;
+static constexpr int IO_I2C_SDA = 4;
+static constexpr int IO_I2C_SCL = 5;
+
+static constexpr int IO_ROT_DAT = 3;
+static constexpr int IO_ROT_CLK = 9;
+static constexpr int IO_ROT_BUT = 8;
+static constexpr int IOMASK_ROT_DAT = BV(0);
+static constexpr int IOMASK_ROT_CLK = BV(1);
+static constexpr int IOMASK_ROT_BUT = BV(2);
 
 #define IOE_MOTOR        BV(0)
 #define IOE_BUZZER       BV(1)
@@ -37,4 +41,5 @@ void init_io(void);
 void init_ioe(void);
 void init_steppers(uint8_t microsteps1, uint8_t microsteps2);
 extern void read_IOE(void);
+uint16_t read_rotary(void);
 void scan_twi(void);

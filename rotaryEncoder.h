@@ -41,13 +41,16 @@ public:
     RotaryEncoder(RotaryEncoder &&other) = delete;
     RotaryEncoder &operator=(const RotaryEncoder &other) = delete;
     RotaryEncoder &operator=(RotaryEncoder &&other) = delete;
-    void init(void);
+    void init(uint16_t data, uint16_t clock_mask, uint16_t button_mask);
     uint8_t read_encoder(uint16_t data);
     uint8_t read_button(uint16_t data);
     uint8_t read(uint16_t data);
 private:
     uint8_t m_input_last_state;
     RotaryMode m_mode;
+    uint16_t m_data_pin_mask = {};
+    uint16_t m_clock_pin_mask = {};
+    uint16_t m_button_pin_mask = {};
 
     uint32_t m_last_changed_time;
     uint16_t m_last_io_data;

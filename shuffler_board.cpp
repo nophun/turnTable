@@ -14,18 +14,15 @@ void init_io(void) {
   pinMode(IO_IOE_INT, INPUT_PULLUP);
   pinMode(IO_ENDSTOP, INPUT_PULLUP);
   pinMode(IO_STEPPER_DIR1, OUTPUT);
-  pinMode(IO_STEPPER_DIR2, OUTPUT);
   pinMode(IO_STEPPER_EN1, OUTPUT);
-  pinMode(IO_STEPPER_EN2, OUTPUT);
   pinMode(IO_STEPPER_STEP1, OUTPUT);
-  pinMode(IO_STEPPER_STEP2, OUTPUT);
+  pinMode(IO_ROT_DAT, INPUT_PULLUP);
+  pinMode(IO_ROT_CLK, INPUT_PULLUP);
+  pinMode(IO_ROT_BUT, INPUT_PULLUP);
 
   digitalWrite(IO_STEPPER_DIR1, LOW);
-  digitalWrite(IO_STEPPER_DIR2, LOW);
   digitalWrite(IO_STEPPER_EN1, HIGH);
-  digitalWrite(IO_STEPPER_EN2, HIGH);
   digitalWrite(IO_STEPPER_STEP1, LOW);
-  digitalWrite(IO_STEPPER_STEP2, LOW);
 }
 
 void init_ioe(void) {
@@ -121,4 +118,18 @@ void scan_twi(void) {
   } else {
     Serial.println("done\n");
   }
+}
+
+uint16_t read_rotary(void) {
+  uint16_t data = {};
+  if (digitalRead(IO_ROT_DAT)) {
+    data |= IOMASK_ROT_DAT;
+  }
+  if (digitalRead(IO_ROT_CLK)) {
+    data |= IOMASK_ROT_CLK;
+  }
+  if (digitalRead(IO_ROT_BUT)) {
+    data |= IOMASK_ROT_BUT;
+  }
+  return data;
 }
