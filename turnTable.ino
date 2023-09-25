@@ -13,7 +13,12 @@ extern TableMotor table;
 Menu menu(&oled);
 byte incomingByte;
 long startTime;
-bool nextAction;
+volatile bool nextAction = {false};
+long time_until_next_move = {0};
+long time_of_last_move = {0};
+long stop_time = {0};
+int direction = {1};
+int speed = {0};
 
 void read_IOE(void) {
     static uint16_t last_data = 0xFFFF;
@@ -36,33 +41,31 @@ void check_serial(void) {
         startTime = millis();
     }
 
-    static int speed = 360;
     static int distance = 360;
-    static int direction = 1;
 
     switch(incomingByte) {
         case 'a':
-            speed = 6;
+            speed = 10;
             print_configuration(distance, speed, direction);
             break;
         case 's':
-            speed = 12;
+            speed = 20;
             print_configuration(distance, speed, direction);
             break;
         case 'd':
-            speed = 24;
+            speed = 40;
             print_configuration(distance, speed, direction);
             break;
         case 'f':
-            speed = 48;
+            speed = 50;
             print_configuration(distance, speed, direction);
             break;
         case 'g':
-            speed = 96;
+            speed = 100;
             print_configuration(distance, speed, direction);
             break;
         case 'h':
-            speed = 192;
+            speed = 200;
             print_configuration(distance, speed, direction);
             break;
         case 'q':
@@ -98,17 +101,19 @@ void check_serial(void) {
             print_configuration(distance, speed, direction);
             break;
         case 'x':
-            table.start_moving_angle(direction * distance, speed);
+            table.setup_move(direction * distance, abs(speed));
             break;
         case 'm':
+            table.enable();
+            green_light_to_motor();
             break;
         case 'n':
-            table.start_moving_angle(direction * distance, speed);
-            nextAction = true;
+            table.setup_move(direction * distance, abs(speed));
+            table.enable();
+            green_light_to_motor();
             break;
         case ' ':
             table.move_angle(direction * distance, speed);
-            // slider_move_distance(direction * distance, speed);
             break;
         case ',':
             table.move_angle(360, 50);
@@ -122,16 +127,6 @@ void check_serial(void) {
         default:
             break;
     }
-
-    // while (nextAction) {
-    //     nextAction = table.nextAction();
-    //     if (digitalRead(IO_ENDSTOP) == 0) {
-    //         table.stop();
-    //     }
-    // }
-    // table.disable();
-
-    while (incomingByte != '\0' && table.getCurrentState() != table.STOPPED) {}
 
     if (incomingByte != '\0' && incomingByte != '\n') {
         Serial.println("took " + String(millis() - startTime) + " ms");
@@ -154,32 +149,93 @@ void setup() {
     oled.refresh();
     rotary.init(IOMASK_ROT_DAT, IOMASK_ROT_CLK, IOMASK_ROT_BUT);
     menu.init();
-} 
+}
+
+static inline void green_light_to_motor(void) {
+    table.enable();
+    time_until_next_move = 1;
+    time_of_last_move = micros();
+}
+
+static inline void red_light_to_motor(void) {
+    time_until_next_move = 0;
+    time_of_last_move = micros();
+    table.stop();
+    table.disable();
+}
 
 void loop() {
-    volatile bool nextAction;
-    static long duration = 0U;
-    check_serial();
     static int start_time = {};
+    static uint16_t distance = {720};
     unsigned int now = millis();
-    uint16_t speed;
-    bool direction;
-    uint16_t distance;
-    int16_t rotation;
-    float anglular_speed;
+    unsigned int now_micros = micros();
+    bool update_move = {false};
+    static constexpr long cMidSteps = 2000; // 720 distance gives 5553 steps
+    static constexpr long cRestartDelay = 1000; // time between stop and start
 
+    if (speed == 0) {
+        red_light_to_motor();
+    } else
+    /* Handle steps */
+    if (time_until_next_move != 0 && (now_micros - time_of_last_move) > time_until_next_move) {
+        time_until_next_move = table.nextAction();
+        time_of_last_move = now_micros;
+        if (time_until_next_move <= 0) {
+            table.stop();
+            table.disable();
+        }
+    }
+
+    /* Handle infinite rotary */
+    if (true && table.getCurrentState() != BasicStepperDriver::STOPPED && table.getStepsRemaining() < cMidSteps) {
+        table.setup_move(distance, speed);
+    }
+
+    check_serial();
     uint16_t io_data = read_rotary();
     uint8_t rotary_state = rotary.read_encoder(io_data);
     uint8_t button_state = rotary.read_button(io_data);
 
     if (rotary_state == DIR_CW) {
         Serial.println("CW");
+        bool need_to_start = (speed == 0);
+        if (!need_to_start || (now - stop_time) > cRestartDelay) {
+            speed += 10;
+            table.setup_move((speed > 0 ? 1 : -1) * distance, abs(speed));
+            if (need_to_start) {
+                green_light_to_motor();
+            }
+            print_configuration(distance, abs(speed), speed > 0 ? 1 : -1);
+        }
+        if (speed == 0) {
+            stop_time = now;
+        }
     } else if (rotary_state == DIR_CCW) {
         Serial.println("CCW");
+        bool need_to_start = (speed == 0);
+        if (!need_to_start || (now - stop_time) > cRestartDelay) {
+            speed -= 10;
+            table.setup_move((speed > 0 ? 1 : -1) * distance, abs(speed));
+            if (need_to_start) {
+                green_light_to_motor();
+            }
+            print_configuration(distance, abs(speed), speed > 0 ? 1 : -1);
+        }
+        if (speed == 0) {
+            stop_time = now;
+        }
     }
 
     if (button_state == BUT_DOWN) {
         Serial.println("BUT");
+        if (table.getCurrentState() == BasicStepperDriver::STOPPED) {
+            table.setup_move((speed > 0 ? 1 : -1) * distance, abs(speed));
+            green_light_to_motor();
+            start_time = now;
+        } else {
+            speed = 0;
+            Serial.println("Stopped at " + String(now - start_time));
+        }
     }
     //     if (menu.enter() == Menu::Action::Start) {
     //         oled.refresh();
@@ -197,19 +253,19 @@ void loop() {
     //             anglular_speed = 0.0F;
     //         }
     //         start_time = now;
-    //         nextAction = true;
+            // nextAction = true;
 
-    //         /* Move until all steps are done or endstop is reached */
-    //         while (nextAction) {
-    //             if (check_away_endstop()) {
-    //                 slider.stop();
-    //                 nextAction = false;
-    //                 break;
-    //             }
-    //             nextAction = slider.nextAction();
-    //         }
-    //         slider.disable();
-    //         Serial.println(millis() - start_time);
+            /* Move until all steps are done or endstop is reached */
+            // while (nextAction) {
+                // if (check_away_endstop()) {
+                //     table.stop();
+                //     nextAction = false;
+                //     break;
+                // }
+                // nextAction = table.nextAction();
+            // }
+            // table.disable();
+            // Serial.println(millis() - start_time);
 
     //         /* Flip direction if either endstop is reached */
     //         if (check_away_endstop()) {
@@ -219,7 +275,7 @@ void loop() {
     //     }
     // }
 
-    oled.refresh();
+    // oled.refresh();
 }
 
 bool check_endstop(bool side) {

@@ -1,7 +1,7 @@
 #pragma once
 
 #define STEPPER1_STEPS        48
-#define STEPPER1_MICROSTEPS   2
+#define STEPPER1_MICROSTEPS   16
 #define STEPPER1_RPM          200
 
 #define STEPPER2_STEPS        200

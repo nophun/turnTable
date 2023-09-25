@@ -14,9 +14,8 @@ public:
 
     void init(float reduction, float rpm_conversion);
     void move_angle(float angle, float rpm = STEPPER1_RPM);
-    void move_angle(float angle, int rpm = STEPPER1_RPM);
     void start_moving_angle(float angle, float rpm = STEPPER1_RPM);
-    void start_moving_angle(float angle, int rpm = STEPPER1_RPM);
+    void setup_move(float angle, float rpm = STEPPER1_RPM);
 private:
     float m_reduction {1.0F};
     float m_rpm_to_deg {1.0F};
