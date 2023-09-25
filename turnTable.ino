@@ -1,3 +1,4 @@
+#include <Wire.h>
 #include <cmath>
 #include "shuffler_board.h"
 #include "turnTable.h"
@@ -13,27 +14,11 @@ extern TableMotor table;
 Menu menu(&oled);
 byte incomingByte;
 long startTime;
-volatile bool nextAction = {false};
 long time_until_next_move = {0};
 long time_of_last_move = {0};
 long stop_time = {0};
 int direction = {1};
 int speed = {0};
-
-void read_IOE(void) {
-    static uint16_t last_data = 0xFFFF;
-    uint16_t data = IOE_read(IOE_ADDRESS);
-    uint16_t diff = last_data ^ data;
-
-    if (diff & IOE_SWITCH1) {
-        if ((data & IOE_SWITCH1) != 0U) {
-            table.stop();
-            table.disable();
-        }
-    }
-
-    last_data = data;
-}
 
 void check_serial(void) {
     if (Serial.available() > 0) {
@@ -140,8 +125,6 @@ void setup() {
     Wire.begin();
     Serial.begin(115200);
 
-    // init_ioe();
-    // init_steppers(STEPPER1_MICROSTEPS, STEPPER2_MICROSTEPS);
     table.init(TABLE_REDUCTION, RPM_TO_DEGREE_PER_SEC);
     oled.start();
     oled.set_header("SLIDER V1", Alignment::Center);
@@ -236,64 +219,6 @@ void loop() {
             speed = 0;
             Serial.println("Stopped at " + String(now - start_time));
         }
-    }
-    //     if (menu.enter() == Menu::Action::Start) {
-    //         oled.refresh();
-    //         speed = menu.get_speed();
-    //         direction = menu.get_direction();
-    //         distance = menu.get_distance();
-    //         rotation = menu.get_rotation();
-            
-    //         print_configuration((direction ? -1 : 1) * distance, speed, direction);
-    //         slider_start_moving_distance((direction ? -1 : 1) * distance, speed);
-    //         if (rotation != 0) {
-    //             anglular_speed = abs(atan(speed / (rotation * 10.0F))) * 180.0F / PI;
-    //             print_configuration((direction ? 1 : -1) * (rotation >= 0 ? 1 : -1) * 1000.0F, anglular_speed, rotation >= 0);
-    //         } else {
-    //             anglular_speed = 0.0F;
-    //         }
-    //         start_time = now;
-            // nextAction = true;
-
-            /* Move until all steps are done or endstop is reached */
-            // while (nextAction) {
-                // if (check_away_endstop()) {
-                //     table.stop();
-                //     nextAction = false;
-                //     break;
-                // }
-                // nextAction = table.nextAction();
-            // }
-            // table.disable();
-            // Serial.println(millis() - start_time);
-
-    //         /* Flip direction if either endstop is reached */
-    //         if (check_away_endstop()) {
-    //             menu.set_direction(!direction);
-    //         }
-    //         menu.reset();
-    //     }
-    // }
-
-    // oled.refresh();
-}
-
-bool check_endstop(bool side) {
-    uint16_t io_data = IOE_read(IOE_ADDRESS);
-    uint16_t mask;
-    if (side == right) {
-        mask = IOE_SWITCH1;
-    } else {
-        mask = IOE_SWITCH2;
-    }
-    return (io_data & mask) == 0U;
-}
-
-bool check_away_endstop(void) {
-    if (menu.get_direction() == right) {
-        return check_endstop(right);
-    } else {
-        return check_endstop(left);
     }
 }
 

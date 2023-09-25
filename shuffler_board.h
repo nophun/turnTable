@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cstdint>
-#include "io_expander.h"
 
 #define BV(b) (1<<(b))
 
@@ -38,8 +37,5 @@ static constexpr int IOMASK_ROT_BUT = BV(2);
 #define IOE_M1MS1        BV(15)
 
 void init_io(void);
-void init_ioe(void);
-void init_steppers(uint8_t microsteps1, uint8_t microsteps2);
-extern void read_IOE(void);
 uint16_t read_rotary(void);
 void scan_twi(void);

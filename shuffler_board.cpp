@@ -25,63 +25,6 @@ void init_io(void) {
   digitalWrite(IO_STEPPER_STEP1, LOW);
 }
 
-void init_ioe(void) {
-  IOE_init(IOE_ADDRESS,
-    IOE_FEEDER_SNS |
-    IOE_SENSOR2 |
-    IOE_SENSOR3 |
-    IOE_BUT_A |
-    IOE_BUT_B |
-    IOE_BUT_C |
-    IOE_SWITCH2 |
-    IOE_SWITCH1);
-  Serial.println(
-    IOE_FEEDER_SNS |
-    IOE_SENSOR2 |
-    IOE_SENSOR3 |
-    IOE_BUT_A |
-    IOE_BUT_B |
-    IOE_BUT_C |
-    IOE_SWITCH2 |
-    IOE_SWITCH1);
-  Serial.println(IOE_read_conf(IOE_ADDRESS));
-  IOE_read(IOE_ADDRESS);
-}
-
-void init_steppers(uint8_t microsteps1, uint8_t microsteps2) {
-  uint16_t ioe_settings = 0x0000;
-
-  if (microsteps1 >= 32) {
-    ioe_settings |= IOE_M1MS1 | IOE_M1MS3;
-  } else if (microsteps1 >= 16) {
-    ioe_settings |= IOE_M1MS3;
-  } else if (microsteps1 >= 8) {
-    ioe_settings |= IOE_M1MS1 | IOE_M1MS2;
-  } else if (microsteps1 >= 4) {
-    ioe_settings |= IOE_M1MS2;
-  } else if (microsteps1 >= 2) {
-    ioe_settings |= IOE_M1MS1;
-  } else if (microsteps1 >= 1) {
-    ioe_settings |= 0x0000;
-  }
-
-  if (microsteps2 >= 32) {
-    ioe_settings |= IOE_M2MS1 | IOE_M2MS3;
-  } else if (microsteps2 >= 16) {
-    ioe_settings |= IOE_M2MS3;
-  } else if (microsteps2 >= 8) {
-    ioe_settings |= IOE_M2MS1 | IOE_M2MS2;
-  } else if (microsteps2 >= 4) {
-    ioe_settings |= IOE_M2MS2;
-  } else if (microsteps2 >= 2) {
-    ioe_settings |= IOE_M2MS1;
-  } else if (microsteps2 >= 1) {
-    ioe_settings |= 0x0000;
-  }
-
-  IOE_write(IOE_ADDRESS, ioe_settings);
-}
-
 void scan_twi(void) {
   byte error, address;
   int nDevices;
