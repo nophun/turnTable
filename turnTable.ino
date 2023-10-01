@@ -153,7 +153,7 @@ void loop() {
     unsigned int now = millis();
     unsigned int now_micros = micros();
     bool update_move = {false};
-    static constexpr long cMidSteps = 2000; // 720 distance gives 5553 steps
+    static constexpr long cMidSteps = 8000; // 720 distance gives 15798 steps
     static constexpr long cRestartDelay = 1000; // time between stop and start
 
     if (speed == 0) {
@@ -164,6 +164,7 @@ void loop() {
         time_until_next_move = table.nextAction();
         time_of_last_move = now_micros;
         if (time_until_next_move <= 0) {
+            Serial.println("Stopped");
             table.stop();
             table.disable();
         }
@@ -171,7 +172,8 @@ void loop() {
 
     /* Handle infinite rotary */
     if (true && table.getCurrentState() != BasicStepperDriver::STOPPED && table.getStepsRemaining() < cMidSteps) {
-        table.setup_move(distance, speed);
+        Serial.println("Kick");
+        table.setup_move((speed > 0 ? 1 : -1) * distance, abs(speed));
     }
 
     check_serial();
@@ -183,11 +185,13 @@ void loop() {
         Serial.println("CW");
         bool need_to_start = (speed == 0);
         if (!need_to_start || (now - stop_time) > cRestartDelay) {
-            speed += 10;
+            speed -= 1;
             table.setup_move((speed > 0 ? 1 : -1) * distance, abs(speed));
             if (need_to_start) {
                 green_light_to_motor();
             }
+            Serial.println(table.getStepsCompleted());
+            Serial.println(table.getStepsRemaining());
             print_configuration(distance, abs(speed), speed > 0 ? 1 : -1);
         }
         if (speed == 0) {
@@ -197,7 +201,7 @@ void loop() {
         Serial.println("CCW");
         bool need_to_start = (speed == 0);
         if (!need_to_start || (now - stop_time) > cRestartDelay) {
-            speed -= 10;
+            speed += 1;
             table.setup_move((speed > 0 ? 1 : -1) * distance, abs(speed));
             if (need_to_start) {
                 green_light_to_motor();

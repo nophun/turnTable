@@ -18,5 +18,5 @@
 
 #define LONG_PRESS_TIME       2000 /* ms */
 
-#define TABLE_REDUCTION 		(94.0F/26.0F)
+#define TABLE_REDUCTION 		((48.0F/10.0F)*(30.0F/14.0F))
 #define RPM_TO_DEGREE_PER_SEC 	0.166666F
