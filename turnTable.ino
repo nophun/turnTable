@@ -18,7 +18,21 @@ long time_until_next_move = {0};
 long time_of_last_move = {0};
 long stop_time = {0};
 int direction = {1};
+static constexpr std::array<int, 13U> speed_steps = {-47, -27, -16, -9, -5, -3, 0, 3, 5, 9, 16, 27, 47};
+uint16_t speed_idx = {speed_steps.size() / 2};
 int speed = {0};
+
+int get_speed(uint16_t idx) {
+    return idx < speed_steps.size() ? speed_steps[idx] : speed_steps.back();
+}
+
+int increase_speed(uint16_t &idx) {
+    return get_speed(idx < speed_steps.size() - 1 ? ++idx : idx);
+}
+
+int decrease_speed(uint16_t &idx) {
+    return get_speed(idx > 0 ? --idx : idx);
+}
 
 void check_serial(void) {
     if (Serial.available() > 0) {
@@ -132,6 +146,8 @@ void setup() {
     oled.refresh();
     rotary.init(IOMASK_ROT_DAT, IOMASK_ROT_CLK, IOMASK_ROT_BUT);
     menu.init();
+
+    speed = get_speed(speed_idx);
 }
 
 static inline void green_light_to_motor(void) {
@@ -185,13 +201,12 @@ void loop() {
         Serial.println("CW");
         bool need_to_start = (speed == 0);
         if (!need_to_start || (now - stop_time) > cRestartDelay) {
-            speed -= 1;
+            speed = decrease_speed(speed_idx);
+            // speed -= 1;
             table.setup_move((speed > 0 ? 1 : -1) * distance, abs(speed));
             if (need_to_start) {
                 green_light_to_motor();
             }
-            Serial.println(table.getStepsCompleted());
-            Serial.println(table.getStepsRemaining());
             print_configuration(distance, abs(speed), speed > 0 ? 1 : -1);
         }
         if (speed == 0) {
@@ -201,7 +216,7 @@ void loop() {
         Serial.println("CCW");
         bool need_to_start = (speed == 0);
         if (!need_to_start || (now - stop_time) > cRestartDelay) {
-            speed += 1;
+            speed = increase_speed(speed_idx);
             table.setup_move((speed > 0 ? 1 : -1) * distance, abs(speed));
             if (need_to_start) {
                 green_light_to_motor();
@@ -229,14 +244,6 @@ void loop() {
 void print_configuration(int distance, int speed, int direction) {
     Serial.print(direction > 0 ? "->" : "<-");
     Serial.print(" distance ");
-    Serial.print(distance);
-    Serial.print(", speed ");
-    Serial.println(speed);
-}
-
-void print_configuration(float distance, float speed, int direction) {
-    Serial.print(direction > 0 ? "->" : "<-");
-    Serial.print(" angle ");
     Serial.print(distance);
     Serial.print(", speed ");
     Serial.println(speed);

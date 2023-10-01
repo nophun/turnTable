@@ -4,8 +4,8 @@
 #include <climits>
 #include "oled.h"
 
-static constexpr std::array<uint16_t, 6U> speed_steps = {1U, 2U, 5U, 10U, 25U, 50U};
-static constexpr std::array<uint16_t, 5U> distance_steps = {50U, 100U, 200U, 300U, 1000U};
+static constexpr std::array<uint16_t, 6U> menu_speed_steps = {1U, 2U, 5U, 10U, 25U, 50U};
+static constexpr std::array<uint16_t, 5U> menu_distance_steps = {50U, 100U, 200U, 300U, 1000U};
 #define right true
 #define left false
 
@@ -52,11 +52,11 @@ public:
 private:
     Page m_current_page = {Page::StartScreen};
     OLED *m_oled {nullptr};
-    size_t m_speed_idx {speed_steps.size() / 2U};
-    size_t m_distance_idx {distance_steps.size() - 1U};
-    uint16_t m_speed {speed_steps[m_speed_idx]};
+    size_t m_speed_idx {menu_speed_steps.size() / 2U};
+    size_t m_distance_idx {menu_distance_steps.size() - 1U};
+    uint16_t m_speed {menu_speed_steps[m_speed_idx]};
     bool m_direction {right};
-    uint16_t m_distance {distance_steps[m_distance_idx]};
+    uint16_t m_distance {menu_distance_steps[m_distance_idx]};
     int16_t m_rotation {0};
     bool m_launch {false};
 

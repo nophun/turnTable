@@ -88,18 +88,18 @@ void Menu::increase_value(void) {
         case Page::StartScreen:
             break;
         case Page::Speed:
-            if (m_speed_idx < (speed_steps.size() - 1U)) {
+            if (m_speed_idx < (menu_speed_steps.size() - 1U)) {
                 m_speed_idx++;
-                m_speed = speed_steps[m_speed_idx];
+                m_speed = menu_speed_steps[m_speed_idx];
             }
             break;
         case Page::Direction:
             m_direction = !m_direction;
             break;
         case Page::Distance:
-            if (m_distance_idx < (distance_steps.size() - 1U)) {
+            if (m_distance_idx < (menu_distance_steps.size() - 1U)) {
                 m_distance_idx++;
-                m_distance = distance_steps[m_distance_idx];
+                m_distance = menu_distance_steps[m_distance_idx];
             }
             break;
         case Page::Rotation:
@@ -123,7 +123,7 @@ void Menu::decrease_value(void) {
         case Page::Speed:
             if (m_speed_idx > 0U) {
                 m_speed_idx--;
-                m_speed = speed_steps[m_speed_idx];
+                m_speed = menu_speed_steps[m_speed_idx];
             }
             break;
         case Page::Direction:
@@ -132,7 +132,7 @@ void Menu::decrease_value(void) {
         case Page::Distance:
             if (m_distance_idx > 0U) {
                 m_distance_idx--;
-                m_distance = distance_steps[m_distance_idx];
+                m_distance = menu_distance_steps[m_distance_idx];
             }
             break;
         case Page::Rotation:
@@ -165,7 +165,7 @@ void Menu::display_value(Page page) {
             }
             break;
         case Page::Distance:
-            if (m_distance_idx == distance_steps.size() - 1) {
+            if (m_distance_idx == menu_distance_steps.size() - 1) {
                 m_oled->set_value("MAX");
             } else {
                 m_oled->set_value(m_distance, 0);

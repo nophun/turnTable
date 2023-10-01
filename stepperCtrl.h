@@ -17,7 +17,7 @@ public:
     void init() {
         begin(STEPPER1_RPM, STEPPER1_MICROSTEPS);
         setEnableActiveState(LOW);
-        setSpeedProfile(BasicStepperDriver::LINEAR_SPEED, STEPPER_ACCEL, STEPPER_DECEL);
+        setSpeedProfile(BasicStepperDriver::CONSTANT_SPEED, STEPPER_ACCEL, STEPPER_DECEL);
         disable();
     }
 
