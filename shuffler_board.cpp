@@ -9,6 +9,7 @@
 OLED oled(OLED_ADDRESS, 5*60);
 RotaryEncoder rotary(RotaryMode::FULL_STEP);
 TableMotor table;
+extern void read_io(void);
 
 void init_io(void) {
   pinMode(IO_IOE_INT, INPUT_PULLUP);
@@ -23,6 +24,10 @@ void init_io(void) {
   digitalWrite(IO_STEPPER_DIR1, LOW);
   digitalWrite(IO_STEPPER_EN1, HIGH);
   digitalWrite(IO_STEPPER_STEP1, LOW);
+
+  attachInterrupt(digitalPinToInterrupt(IO_ROT_CLK), read_io, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(IO_ROT_DAT), read_io, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(IO_ROT_BUT), read_io, CHANGE);
 }
 
 void scan_twi(void) {

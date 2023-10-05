@@ -20,7 +20,16 @@ long stop_time = {0};
 int direction = {1};
 static constexpr std::array<int, 13U> speed_steps = {-47, -27, -16, -9, -5, -3, 0, 3, 5, 9, 16, 27, 47};
 uint16_t speed_idx = {speed_steps.size() / 2};
+uint16_t saved_speed_idx = {speed_steps.size() / 2};
 int speed = {0};
+volatile uint8_t rotary_state {0x00};
+volatile uint8_t button_state {0x00};
+
+void read_io(void) {
+    uint16_t io_data = read_rotary();
+    rotary_state = rotary.read_encoder(io_data);
+    button_state = rotary.read_button(io_data);
+}
 
 int get_speed(uint16_t idx) {
     return idx < speed_steps.size() ? speed_steps[idx] : speed_steps.back();
@@ -32,6 +41,11 @@ int increase_speed(uint16_t &idx) {
 
 int decrease_speed(uint16_t &idx) {
     return get_speed(idx > 0 ? --idx : idx);
+}
+
+int reset_speed(void) {
+    speed_idx = {speed_steps.size() / 2};
+    return get_speed(speed_idx);
 }
 
 void check_serial(void) {
@@ -164,13 +178,13 @@ static inline void red_light_to_motor(void) {
 }
 
 void loop() {
+    static constexpr long cMidSteps = 8000; // 720 distance gives 15798 steps
+    static constexpr long cRestartDelay = 1000; // time between stop and start
     static int start_time = {};
     static uint16_t distance = {720};
     unsigned int now = millis();
     unsigned int now_micros = micros();
     bool update_move = {false};
-    static constexpr long cMidSteps = 8000; // 720 distance gives 15798 steps
-    static constexpr long cRestartDelay = 1000; // time between stop and start
 
     if (speed == 0) {
         red_light_to_motor();
@@ -193,16 +207,14 @@ void loop() {
     }
 
     check_serial();
-    uint16_t io_data = read_rotary();
-    uint8_t rotary_state = rotary.read_encoder(io_data);
-    uint8_t button_state = rotary.read_button(io_data);
+    // read_io();
 
     if (rotary_state == DIR_CW) {
+        rotary_state = 0x00;
         Serial.println("CW");
         bool need_to_start = (speed == 0);
         if (!need_to_start || (now - stop_time) > cRestartDelay) {
             speed = decrease_speed(speed_idx);
-            // speed -= 1;
             table.setup_move((speed > 0 ? 1 : -1) * distance, abs(speed));
             if (need_to_start) {
                 green_light_to_motor();
@@ -213,6 +225,7 @@ void loop() {
             stop_time = now;
         }
     } else if (rotary_state == DIR_CCW) {
+        rotary_state = 0x00;
         Serial.println("CCW");
         bool need_to_start = (speed == 0);
         if (!need_to_start || (now - stop_time) > cRestartDelay) {
@@ -229,13 +242,17 @@ void loop() {
     }
 
     if (button_state == BUT_DOWN) {
+        button_state = 0x00;
         Serial.println("BUT");
         if (table.getCurrentState() == BasicStepperDriver::STOPPED) {
+            speed_idx = saved_speed_idx;
+            speed = get_speed(speed_idx);
             table.setup_move((speed > 0 ? 1 : -1) * distance, abs(speed));
             green_light_to_motor();
             start_time = now;
         } else {
-            speed = 0;
+            saved_speed_idx = speed_idx;
+            speed = reset_speed();
             Serial.println("Stopped at " + String(now - start_time));
         }
     }
